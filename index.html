@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libro de Guardia - Camilleros</title>
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Librería para convertir HTML a imagen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --line-color: #a0c4ff;
+            --paper-bg: #fffdf9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f5;
+            margin: 0;
+            padding: 8px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--paper-bg);
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            position: relative;
+            background-image: linear-gradient(var(--line-color) 1px, transparent 1px);
+            background-size: 100% 35px;
+            background-position: y 100px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Selector de turno elegante */
+        .select-shift {
+            margin: 5px 0 10px 0;
+            font-size: 15px;
+            font-weight: bold;
+            color: #555;
+            padding: 4px 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+        .select-shift:focus {
+            border-color: #2980b9;
+        }
+
+        .date-display {
+            font-size: 13px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background-color: #34495e;
+        }
+
+        button.btn-image {
+            background-color: #27ae60;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button.btn-image:hover {
+            background-color: #219653;
+        }
+
+        button.btn-history {
+            background-color: #2980b9;
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+        button.btn-history:hover {
+            background-color: #1f618d;
+        }
+
+        /* PANEL DE INGRESO RÁPIDO VERTICAL */
+        .input-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .input-panel-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-group-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .patient-input, .select-location, .select-bed {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            background: white;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .patient-input:focus, .select-location:focus, .select-bed:focus {
+            border-color: #2980b9;
+        }
+
+        .btn-add-row {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-add-row:hover {
+            background-color: #219653;
+        }
+
+        /* LISTADO DE TRABAJO GENERADO */
+        .work-list-section {
+            margin-bottom: 30px;
+        }
+
+        .header-row {
+            display: grid;
+            grid-template-columns: 30px 2fr 2fr 2fr 85px 35px;
+            gap: 6px;
+            font-weight: bold;
+            background-color: #34495e;
+            color: white;
+            padding: 10px 6px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .guard-row {
+            display: grid;
+            grid-template-columns: 30px 2fr 2fr 2fr 85px 35px;
+            gap: 6px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 6px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #dcdde1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .row-number {
+            font-weight: bold;
+            color: #7f8c8d;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .row-text {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #2c3e50;
+            word-break: break-word;
+            line-height: 1.2;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .empty-list-msg {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 6px;
+            font-size: 14px;
+            border: 1px dashed #bdc3c7;
+        }
+
+        /* SECCIÓN OBSERVACIONES Y CIERRE DE GUARDIA */
+        .closing-section {
+            margin-top: 35px;
+            border-top: 2px dashed #34495e;
+            padding-top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .closing-section h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            color: #2c3e50;
+            text-transform: uppercase;
+        }
+
+        .closing-info-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .inventory-table th, .inventory-table td {
+            border: 1px solid #d0d0d0;
+            padding: 10px 15px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .inventory-table th {
+            background-color: #34495e;
+            color: white;
+            font-weight: bold;
+        }
+
+        .qty-input {
+            width: 90px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .qty-select {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .download-footer-container {
+            margin-top: 30px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* MODO DE CAPTURA - ESTILOS LIMPIOS PARA LA IMAGEN */
+        .is-capturing .input-panel,
+        .is-capturing .download-footer-container {
+            display: none !important;
+        }
+        .is-capturing {
+            background-image: none !important;
+            background-color: #ffffff !important;
+            padding: 40px !important;
+            width: 1100px !important;
+        }
+        .is-capturing .header-row {
+            background-color: #333 !important;
+            -webkit-print-color-adjust: exact;
+        }
+        .is-capturing .guard-row {
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 1px solid #d0d0d0 !important;
+            min-height: 45px !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            grid-template-columns: 30px 2fr 2fr 2fr 85px !important; 
+        }
+        .is-capturing .col-action-del {
+            display: none !important;
+        }
+        .is-capturing .row-text {
+            font-size: 12px !important;
+            font-weight: 500;
+            color: #000 !important;
+        }
+        .is-capturing.hide-bed-column .guard-row {
+            grid-template-columns: 30px 3fr 3fr 3fr !important;
+        }
+        .is-capturing.hide-bed-column .header-row {
+            grid-template-columns: 30px 3fr 3fr 3fr !important;
+        }
+        .is-capturing.hide-bed-column .col-cama {
+            display: none !important;
+        }
+        .is-capturing .closing-section {
+            background: transparent !important;
+            border-top: 2px solid #333 !important;
+            margin-top: 40px !important;
+        }
+        .is-capturing .inventory-table th {
+            background-color: #333 !important;
+            -webkit-print-color-adjust: exact;
+        }
+        .is-capturing .inventory-table input,
+        .is-capturing .inventory-table select {
+            border: none !important;
+            background: transparent !important;
+            font-size: 14px !important;
+            font-weight: 500;
+            padding: 0 !important;
+            text-align: left;
+        }
+        .is-capturing .select-shift {
+            border: none !important;
+            background: transparent !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            font-size: 15px;
+            font-weight: bold;
+            color: #333 !important;
+            padding: 0;
+            text-align: center;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="capture-area">
+    <header>
+        <h1>Servicio de Camilleros</h1>
+        <select id="select-shift" class="select-shift" onchange="saveShift()">
+            <option value="Turno Mañana">Turno Mañana</option>
+            <option value="Turno Tarde">Turno Tarde</option>
+            <option value="Turno Noche 'A'">Turno Noche "A"</option>
+            <option value="Turno Noche 'B'" selected>Turno Noche "B"</option>
+            <option value="Franquero">Franquero</option>
+        </select>
+        <div class="date-display" id="current-date"></div>
+    </header>
+
+    <!-- PANEL DE INGRESO RÁPIDO -->
+    <div class="input-panel">
+        <div class="input-panel-title">Agregar Nuevo Paciente al Listado</div>
+        <div class="input-stack">
+            <div>
+                <input type="text" id="input-patient" class="patient-input" placeholder="Apellido y Nombre del paciente">
+            </div>
+            <div class="input-group-row">
+                <select id="select-origin" class="select-location">
+                    <option value="">Origen...</option>
+                </select>
+                <select id="select-dest" class="select-location">
+                    <option value="">Destino...</option>
+                </select>
+            </div>
+            <div class="input-group-row">
+                <select id="select-bed" class="select-bed">
+                    <option value="">Cama</option>
+                </select>
+                <button class="btn-add-row" onclick="addPatientToList()">✓ Agregar Paciente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LISTADO DE TRABAJO GENERADO -->
+    <div class="work-list-section">
+        <div class="header-row">
+            <div>N°</div>
+            <div>Paciente</div>
+            <div>Origen</div>
+            <div>Destino</div>
+            <div class="col-cama">Cama N°</div>
+            <div class="col-action-del"></div>
+        </div>
+
+        <div id="rows-container">
+            <div class="empty-list-msg" id="empty-msg">No hay pacientes cargados en el listado todavía.</div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN OBSERVACIONES Y CIERRE DE GUARDIA -->
+    <div class="closing-section">
+        <h3>Observaciones y cierre de guardia</h3>
+        <div class="closing-info-text">Se entrega la guardia en condiciones y elementos disponibles</div>
+        
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th style="width: 70%;">Elementos</th>
+                    <th style="width: 30%;">Cantidades</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Sillas de ruedas</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Tubos de oxígeno</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Tablas</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Cuellos</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Camillas</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Órdenes pendientes</td>
+                    <td>
+                        <select class="qty-select">
+                            <option value="">--</option>
+                            <option value="Sí">Sí</option>
+                            <option value="No">No</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- BOTONES INFERIORES -->
+    <div class="download-footer-container">
+        <button class="btn-image" onclick="downloadCleanJPG()">📸 Descargar Imagen </button>
+        <button class="btn-history" onclick="window.location.href='historial.html'">📂 Ver Historial de Guardias</button>
+    </div>
+</div>
+
+<script>
+    const optionsList = [
+        "Guardia adultos", 
+        "Guardia pediatría", 
+        "Inter pediat",
+        "mínimos", 
+        "progre", 
+        "Obste", 
+        "Partos",
+        "Uti", 
+        "neo",
+        "Rx", 
+        "Tomo", 
+        "ecografía",
+        "gastro",
+        "Quirófano", 
+        "Morgue"
+    ];
+
+    const ahora = new Date();
+    
+    // EXCEPCIÓN TURNO NOCHE: Si está entre las 00:00 y las 06:59, pertenece operativa y visualmente a la fecha anterior (Turno Noche A/B)
+    let fechaOperativa = new Date(ahora);
+    if (ahora.getHours() < 7) {
+        fechaOperativa.setDate(ahora.getDate() - 1);
+    }
+
+    const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const fechaTextoFormateada = fechaOperativa.toLocaleDateString('es-ES', opcionesFecha);
+    document.getElementById('current-date').innerText = "Fecha: " + fechaTextoFormateada;
+
+    const todayStr = fechaOperativa.toISOString().slice(0,10);
+    const storageKey = 'guardia_pacientes_' + todayStr;
+    const shiftStorageKey = 'guardia_turno_' + todayStr;
+
+    const savedShift = localStorage.getItem(shiftStorageKey);
+    if (savedShift) {
+        document.getElementById('select-shift').value = savedShift;
+    }
+
+    function saveShift() {
+        const shiftVal = document.getElementById('select-shift').value;
+        localStorage.setItem(shiftStorageKey, shiftVal);
+    }
+
+    function initSelectors() {
+        const originSelect = document.getElementById('select-origin');
+        const destSelect = document.getElementById('select-dest');
+        const bedSelect = document.getElementById('select-bed');
+
+        optionsList.forEach(opt => {
+            originSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+            destSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+        });
+
+        for (let i = 1; i <= 200; i++) {
+            bedSelect.innerHTML += `<option value="${i}">Cama ${i}</option>`;
+        }
+    }
+
+    let patientsData = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    function renderList() {
+        const container = document.getElementById('rows-container');
+        container.innerHTML = '';
+
+        if (patientsData.length === 0) {
+            container.innerHTML = '<div class="empty-list-msg" id="empty-msg">No hay pacientes cargados en el listado todavía.</div>';
+            return;
+        }
+
+        patientsData.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = 'guard-row';
+            row.innerHTML = `
+                <div class="row-number">${index + 1}</div>
+                <div class="row-text">${item.patient}</div>
+                <div class="row-text">${item.origin || '--'}</div>
+                <div class="row-text">${item.dest || '--'}</div>
+                <div class="row-text col-cama">${item.bed ? 'Cama ' + item.bed : '--'}</div>
+                <div class="col-action-del"><button class="btn-delete" onclick="removePatient(${index})" title="Eliminar">×</button></div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function addPatientToList() {
+        const patientInput = document.getElementById('input-patient');
+        const originSelect = document.getElementById('select-origin');
+        const destSelect = document.getElementById('select-dest');
+        const bedSelect = document.getElementById('select-bed');
+
+        const patientName = patientInput.value.trim();
+        if (!patientName) {
+            alert('Por favor, ingresa el apellido y nombre del paciente.');
+            patientInput.focus();
+            return;
+        }
+
+        patientsData.push({
+            patient: patientName,
+            origin: originSelect.value,
+            dest: destSelect.value,
+            bed: bedSelect.value
+        });
+
+        localStorage.setItem(storageKey, JSON.stringify(patientsData));
+
+        patientInput.value = '';
+        originSelect.value = '';
+        destSelect.value = '';
+        bedSelect.value = '';
+        patientInput.focus();
+
+        renderList();
+    }
+
+    function removePatient(index) {
+        patientsData.splice(index, 1);
+        localStorage.setItem(storageKey, JSON.stringify(patientsData));
+        renderList();
+    }
+
+    function downloadCleanJPG() {
+        if (patientsData.length === 0) {
+            alert('Agrega al menos un paciente al listado antes de descargar.');
+            return;
+        }
+
+        const container = document.getElementById('capture-area');
+        let allBedsEmpty = patientsData.every(item => item.bed === "");
+
+        container.classList.add('is-capturing');
+        if (allBedsEmpty) container.classList.add('hide-bed-column');
+
+        html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+            container.classList.remove('is-capturing');
+            container.classList.remove('hide-bed-column');
+
+            const link = document.createElement('a');
+            link.download = 'Libro_Guardia_' + todayStr + '.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }).catch(err => {
+            container.classList.remove('is-capturing');
+            container.classList.remove('hide-bed-column');
+            alert('Hubo un error al generar la imagen.');
+            console.error(err);
+        });
+    }
+
+    initSelectors();
+    renderList();
+</script>
+
+</body>
+</html>

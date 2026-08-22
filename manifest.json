@@ -1,0 +1,18 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "fullscreen",
+  "name": "libro de guardia",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "librodeguardia.netlify",
+  "start_url": "/librodeguardia.netlify.app",
+  "theme_color": "#ffffff",
+  "id": "Com.camilleros.guardia",
+  "description": "Libro de guardia para camilleros",
+  "lang": "es",
+  "prefer_related_applications": true,
+  "categories": [
+    "medical"
+  ]
+}
