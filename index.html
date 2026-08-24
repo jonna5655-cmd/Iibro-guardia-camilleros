@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libro de Guardia - Camilleros</title>
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Librería para convertir HTML a imagen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --line-color: #a0c4ff;
+            --paper-bg: #fffdf9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f5;
+            margin: 0;
+            padding: 8px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--paper-bg);
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            position: relative;
+            background-image: linear-gradient(var(--line-color) 1px, transparent 1px);
+            background-size: 100% 35px;
+            background-position: y 100px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        header h1 {
+            margin: 0 0 10px 0;
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .select-shift, .date-input {
+            margin: 5px 0;
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            padding: 6px 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+        .select-shift:focus, .date-input:focus {
+            border-color: #2980b9;
+        }
+
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background-color: #34495e;
+        }
+
+        button.btn-image {
+            background-color: #27ae60;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button.btn-image:hover {
+            background-color: #219653;
+        }
+
+        button.btn-history {
+            background-color: #2980b9;
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+        button.btn-history:hover {
+            background-color: #1f618d;
+        }
+
+        button.btn-clear-list {
+            background-color: #c0392b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button.btn-clear-list:hover {
+            background-color: #a93226;
+        }
+
+        /* PANEL DE INGRESO RÁPIDO */
+        .input-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .input-panel-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-group-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .patient-input, .select-location, .select-bed {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            background: white;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .patient-input:focus, .select-location:focus, .select-bed:focus {
+            border-color: #2980b9;
+        }
+
+        .btn-add-row {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-add-row:hover {
+            background-color: #219653;
+        }
+
+        /* LISTADO DE TRABAJO */
+        .work-list-section {
+            margin-bottom: 30px;
+        }
+
+        .work-list-header-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 5px;
+        }
+
+        .header-row {
+            display: grid;
+            grid-template-columns: 30px 2fr 2fr 2fr 85px 35px;
+            gap: 6px;
+            font-weight: bold;
+            background-color: #34495e;
+            color: white;
+            padding: 10px 6px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .guard-row {
+            display: grid;
+            grid-template-columns: 30px 2fr 2fr 2fr 85px 35px;
+            gap: 6px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 6px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #dcdde1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .row-number {
+            font-weight: bold;
+            color: #7f8c8d;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .row-text {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #2c3e50;
+            word-break: break-word;
+            line-height: 1.2;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .empty-list-msg {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 6px;
+            font-size: 14px;
+            border: 1px dashed #bdc3c7;
+        }
+
+        /* CIERRE DE GUARDIA */
+        .closing-section {
+            margin-top: 35px;
+            border-top: 2px dashed #34495e;
+            padding-top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .closing-section h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            color: #2c3e50;
+            text-transform: uppercase;
+        }
+
+        .closing-info-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .inventory-table th, .inventory-table td {
+            border: 1px solid #d0d0d0;
+            padding: 10px 15px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .inventory-table th {
+            background-color: #34495e;
+            color: white;
+            font-weight: bold;
+        }
+
+        .qty-input {
+            width: 90px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .qty-select {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .download-footer-container {
+            margin-top: 30px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* VISTA HISTORIAL (OCULTA POR DEFECTO) */
+        #history-view {
+            display: none;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .history-card {
+            background: #ffffff;
+            border: 1px solid #dcdde1;
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .history-card-header {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .history-table th, .history-table td {
+            border: 1px solid #d0d0d0;
+            padding: 6px 10px;
+            text-align: left;
+        }
+
+        .history-table th {
+            background-color: #f1f2f6;
+            color: #333;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 30px;
+            font-size: 15px;
+        }
+
+        .btn-clear-history {
+            background-color: #c0392b;
+        }
+        .btn-clear-history:hover {
+            background-color: #a93226;
+        }
+
+        /* MODO DE CAPTURA */
+        .is-capturing .input-panel,
+        .is-capturing .download-footer-container,
+        .is-capturing .work-list-header-container {
+            display: none !important;
+        }
+        .is-capturing {
+            background-image: none !important;
+            background-color: #ffffff !important;
+            padding: 40px !important;
+            width: 1100px !important;
+        }
+        .is-capturing .header-row {
+            background-color: #333 !important;
+            -webkit-print-color-adjust: exact;
+        }
+        .is-capturing .guard-row {
+            background: transparent !important;
+            border: none !important;
+            border-bottom: 1px solid #d0d0d0 !important;
+            min-height: 45px !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            grid-template-columns: 30px 2fr 2fr 2fr 85px !important; 
+        }
+        .is-capturing .col-action-del {
+            display: none !important;
+        }
+        .is-capturing .row-text {
+            font-size: 12px !important;
+            font-weight: 500;
+            color: #000 !important;
+        }
+        .is-capturing.hide-bed-column .guard-row {
+            grid-template-columns: 30px 3fr 3fr 3fr !important;
+        }
+        .is-capturing.hide-bed-column .header-row {
+            grid-template-columns: 30px 3fr 3fr 3fr !important;
+        }
+        .is-capturing.hide-bed-column .col-cama {
+            display: none !important;
+        }
+        .is-capturing .closing-section {
+            background: transparent !important;
+            border-top: 2px solid #333 !important;
+            margin-top: 40px !important;
+        }
+        .is-capturing .inventory-table th {
+            background-color: #333 !important;
+            -webkit-print-color-adjust: exact;
+        }
+        .is-capturing .inventory-table input,
+        .is-capturing .inventory-table select {
+            border: none !important;
+            background: transparent !important;
+            font-size: 14px !important;
+            font-weight: 500;
+            padding: 0 !important;
+            text-align: left;
+        }
+        .is-capturing .select-shift,
+        .is-capturing .date-input {
+            border: none !important;
+            background: transparent !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            font-size: 15px;
+            font-weight: bold;
+            color: #333 !important;
+            padding: 0;
+            text-align: center;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- VISTA PRINCIPAL: LISTADO ACTUAL -->
+<div class="container" id="main-view">
+    <header>
+        <h1>Servicio de Camilleros</h1>
+        <div class="header-controls">
+            <select id="select-shift" class="select-shift" onchange="saveShift()">
+                <option value="Turno Mañana">Turno Mañana</option>
+                <option value="Turno Tarde">Turno Tarde</option>
+                <option value="Turno Noche A">Turno Noche A</option>
+                <option value="Turno Noche B" selected>Turno Noche B</option>
+                <option value="Franquero">Franquero</option>
+            </select>
+            <input type="date" id="select-date" class="date-input" onchange="changeDate()">
+        </div>
+    </header>
+
+    <!-- PANEL DE INGRESO RÁPIDO -->
+    <div class="input-panel">
+        <div class="input-panel-title">Agregar Nuevo Paciente al Listado</div>
+        <div class="input-stack">
+            <div>
+                <input type="text" id="input-patient" class="patient-input" placeholder="Apellido y Nombre del paciente">
+            </div>
+            <div class="input-group-row">
+                <select id="select-origin" class="select-location">
+                    <option value="">Origen...</option>
+                </select>
+                <select id="select-dest" class="select-location">
+                    <option value="">Destino...</option>
+                </select>
+            </div>
+            <div class="input-group-row">
+                <select id="select-bed" class="select-bed">
+                    <option value="">Cama</option>
+                </select>
+                <button class="btn-add-row" onclick="addPatientToList()">✓ Agregar Paciente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LISTADO DE TRABAJO GENERADO -->
+    <div class="work-list-section">
+        <div class="work-list-header-container">
+            <button class="btn-clear-list" onclick="clearList()">🗑️ Limpiar Lista</button>
+        </div>
+        <div class="header-row">
+            <div>N°</div>
+            <div>Paciente</div>
+            <div>Origen</div>
+            <div>Destino</div>
+            <div class="col-cama">Cama N°</div>
+            <div class="col-action-del"></div>
+        </div>
+
+        <div id="rows-container">
+            <div class="empty-list-msg" id="empty-msg">No hay pacientes cargados en el listado todavía.</div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN OBSERVACIONES Y CIERRE DE GUARDIA -->
+    <div class="closing-section">
+        <h3>Observaciones y cierre de guardia</h3>
+        <div class="closing-info-text">Se entrega la guardia en condiciones y elementos disponibles</div>
+        
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th style="width: 70%;">Elementos</th>
+                    <th style="width: 30%;">Cantidades</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Sillas de ruedas</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Tubos de oxígeno</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Tablas</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Cuellos</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Camillas</td>
+                    <td><input type="number" class="qty-input" min="0" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <td>Órdenes pendientes</td>
+                    <td>
+                        <select class="qty-select">
+                            <option value="">--</option>
+                            <option value="Sí">Sí</option>
+                            <option value="No">No</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- BOTONES INFERIORES -->
+    <div class="download-footer-container">
+        <button class="btn-image" onclick="downloadCleanJPG()">📸 Descargar Imagen </button>
+        <button class="btn-history" onclick="showHistory()">📂 Ver Historial de Guardias</button>
+    </div>
+</div>
+
+<!-- VISTA SECUNDARIA: HISTORIAL -->
+<div class="container" id="history-view">
+    <header>
+        <h1>Historial de Guardias</h1>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-clear-history" onclick="clearAllHistory()">🗑️ Borrar Historial</button>
+            <button style="background-color: #2980b9;" onclick="showMain()">← Volver al Listado Actual</button>
+        </div>
+    </header>
+
+    <div id="history-container" class="history-list">
+        <!-- El historial se cargará dinámicamente aquí -->
+    </div>
+</div>
+
+<script>
+    const optionsList = [
+        "Guardia adultos", "Guardia pediatría", "Inter pediat",
+        "mínimos", "progre", "Obste", "Partos",
+        "Uti", "neo", "Rx", "Tomo", "ecografía",
+        "gastro", "Quirófano", "Morgue"
+    ];
+
+    const todayObj = new Date();
+    const todayStr = todayObj.toISOString().slice(0, 10);
+    const tomorrowObj = new Date();
+    tomorrowObj.setDate(todayObj.getDate() + 1);
+    const tomorrowStr = tomorrowObj.toISOString().slice(0, 10);
+
+    const dateInput = document.getElementById('select-date');
+    dateInput.min = todayStr;
+    dateInput.max = tomorrowStr;
+
+    let activeDateStr = localStorage.getItem('guardia_current_date') || todayStr;
+    if (activeDateStr < todayStr || activeDateStr > tomorrowStr) {
+        activeDateStr = todayStr;
+    }
+    dateInput.value = activeDateStr;
+
+    let storageKey = 'guardia_pacientes_' + activeDateStr;
+    let shiftStorageKey = 'guardia_turno_' + activeDateStr;
+
+    const savedShift = localStorage.getItem(shiftStorageKey);
+    if (savedShift) {
+        document.getElementById('select-shift').value = savedShift;
+    }
+
+    function saveShift() {
+        const shiftVal = document.getElementById('select-shift').value;
+        localStorage.setItem(shiftStorageKey, shiftVal);
+    }
+
+    function changeDate() {
+        const selectedDate = dateInput.value;
+        if (selectedDate < todayStr || selectedDate > tomorrowStr) {
+            alert('Solo se permite elegir la fecha actual o hasta un día más.');
+            dateInput.value = activeDateStr;
+            return;
+        }
+        activeDateStr = selectedDate;
+        localStorage.setItem('guardia_current_date', activeDateStr);
+        
+        storageKey = 'guardia_pacientes_' + activeDateStr;
+        shiftStorageKey = 'guardia_turno_' + activeDateStr;
+
+        const currentShift = localStorage.getItem(shiftStorageKey);
+        if (currentShift) {
+            document.getElementById('select-shift').value = currentShift;
+        } else {
+            saveShift();
+        }
+
+        patientsData = JSON.parse(localStorage.getItem(storageKey)) || [];
+        renderList();
+    }
+
+    function initSelectors() {
+        const originSelect = document.getElementById('select-origin');
+        const destSelect = document.getElementById('select-dest');
+        const bedSelect = document.getElementById('select-bed');
+
+        optionsList.forEach(opt => {
+            originSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+            destSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+        });
+
+        for (let i = 1; i <= 200; i++) {
+            bedSelect.innerHTML += `<option value="${i}">Cama ${i}</option>`;
+        }
+    }
+
+    let patientsData = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    function renderList() {
+        const container = document.getElementById('rows-container');
+        container.innerHTML = '';
+
+        if (patientsData.length === 0) {
+            container.innerHTML = '<div class="empty-list-msg" id="empty-msg">No hay pacientes cargados en el listado todavía.</div>';
+            return;
+        }
+
+        patientsData.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = 'guard-row';
+            row.innerHTML = `
+                <div class="row-number">${index + 1}</div>
+                <div class="row-text">${item.patient}</div>
+                <div class="row-text">${item.origin || '--'}</div>
+                <div class="row-text">${item.dest || '--'}</div>
+                <div class="row-text col-cama">${item.bed ? 'Cama ' + item.bed : '--'}</div>
+                <div class="col-action-del"><button class="btn-delete" onclick="removePatient(${index})" title="Eliminar">×</button></div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function addPatientToList() {
+        const patientInput = document.getElementById('input-patient');
+        const originSelect = document.getElementById('select-origin');
+        const destSelect = document.getElementById('select-dest');
+        const bedSelect = document.getElementById('select-bed');
+
+        const patientName = patientInput.value.trim();
+        if (!patientName) {
+            alert('Por favor, ingresa el apellido y nombre del paciente.');
+            patientInput.focus();
+            return;
+        }
+
+        patientsData.push({
+            patient: patientName,
+            origin: originSelect.value,
+            dest: destSelect.value,
+            bed: bedSelect.value
+        });
+
+        localStorage.setItem(storageKey, JSON.stringify(patientsData));
+
+        patientInput.value = '';
+        originSelect.value = '';
+        destSelect.value = '';
+        bedSelect.value = '';
+        patientInput.focus();
+
+        renderList();
+    }
+
+    function removePatient(index) {
+        patientsData.splice(index, 1);
+        localStorage.setItem(storageKey, JSON.stringify(patientsData));
+        renderList();
+    }
+
+    function clearList() {
+        if (patientsData.length === 0) return;
+        if (confirm('¿Estás seguro de que deseas limpiar toda la lista de pacientes de esta guardia?')) {
+            patientsData = [];
+            localStorage.setItem(storageKey, JSON.stringify(patientsData));
+            renderList();
+        }
+    }
+
+    function downloadCleanJPG() {
+        if (patientsData.length === 0) {
+            alert('Agrega al menos un paciente al listado antes de descargar.');
+            return;
+        }
+
+        const container = document.getElementById('main-view');
+        let allBedsEmpty = patientsData.every(item => item.bed === "");
+
+        container.classList.add('is-capturing');
+        if (allBedsEmpty) container.classList.add('hide-bed-column');
+
+        html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+            container.classList.remove('is-capturing');
+            container.classList.remove('hide-bed-column');
+
+            const link = document.createElement('a');
+            link.download = 'Libro_Guardia_' + activeDateStr + '.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }).catch(err => {
+            container.classList.remove('is-capturing');
+            container.classList.remove('hide-bed-column');
+            alert('Hubo un error al generar la imagen.');
+            console.error(err);
+        });
+    }
+
+    // Funciones de navegación interna para el historial
+    function showHistory() {
+        document.getElementById('main-view').style.display = 'none';
+        document.getElementById('history-view').style.display = 'block';
+        loadHistory();
+    }
+
+    function showMain() {
+        document.getElementById('history-view').style.display = 'none';
+        document.getElementById('main-view').style.display = 'block';
+    }
+
+    function loadHistory() {
+        const container = document.getElementById('history-container');
+        container.innerHTML = '';
+
+        let keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith('guardia_pacientes_')) {
+                keys.push(key);
+            }
+        }
+
+        keys.sort().reverse();
+
+        if (keys.length === 0) {
+            container.innerHTML = '<div class="empty-history">No hay registros guardados en el historial todavía.</div>';
+            return;
+        }
+
+        keys.forEach(key => {
+            let dateStr = key.replace('guardia_pacientes_', '');
+            let patientsData = JSON.parse(localStorage.getItem(key)) || [];
+
+            let [year, month, day] = dateStr.split('-');
+            let dateObj = new Date(year, month - 1, day);
+            let options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            let formattedDate = dateObj.toLocaleDateString('es-ES', options);
+
+            let card = document.createElement('div');
+            card.className = 'history-card';
+
+            let tableRows = '';
+            if (patientsData.length > 0) {
+                patientsData.forEach((item, index) => {
+                    tableRows += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><b>${item.patient}</b></td>
+                            <td>${item.origin || '--'}</td>
+                            <td>${item.dest || '--'}</td>
+                            <td>${item.bed ? 'Cama ' + item.bed : '--'}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableRows = `<tr><td colspan="5" style="text-align: center; font-style: italic; color: #7f8c8d;">Lista limpiada o sin pacientes registrados en esta fecha.</td></tr>`;
+            }
+
+            card.innerHTML = `
+                <div class="history-card-header">
+                    <span>📅 ${formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1)}</span>
+                </div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px;">N°</th>
+                            <th>Paciente</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th style="width: 90px;">Cama</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    function clearAllHistory() {
+        if (confirm('¿Estás seguro de que deseas eliminar todo el historial de guardias guardado?')) {
+            let keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                if (key.startsWith('guardia_pacientes_') || key.startsWith('guardia_turno_') || key === 'guardia_current_date') {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            loadHistory();
+        }
+    }
+
+    initSelectors();
+    renderList();
+</script>
+
+<!-- SERVICE WORKER AUTOMÁTICO SIN NECESIDAD DE ARCHIVOS EXTERNOS ADICIONALES -->
+<script>
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+            self.addEventListener('fetch', e => {
+                e.respondWith(
+                    caches.match(e.request).then(res => res || fetch(e.request))
+                );
+            });
+        `;
+        const blob = new Blob([swCode], { type: 'text/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl)
+            .then(() => console.log('App lista para modo Offline'))
+            .catch(err => console.log('Error SW', err));
+    }
+</script>
+
+</body>
+</html>
