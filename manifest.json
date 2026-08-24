@@ -1,18 +1,9 @@
 {
-  "background_color": "#ffffff",
-  "dir": "ltr",
-  "display": "fullscreen",
-  "name": "libro de guardia",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "librodeguardia.netlify",
-  "start_url": "/librodeguardia.netlify.app",
-  "theme_color": "#ffffff",
-  "id": "Com.camilleros.guardia",
-  "description": "Libro de guardia para camilleros",
-  "lang": "es",
-  "prefer_related_applications": true,
-  "categories": [
-    "medical"
-  ]
+  "name": "Libro de Guardia Camilleros",
+  "short_name": "Guardia Camilleros",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#eef2f5",
+  "theme_color": "#2c3e50",
+  "icons": []
 }

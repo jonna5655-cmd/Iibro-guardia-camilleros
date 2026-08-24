@@ -43,33 +43,35 @@
         }
 
         header h1 {
-            margin: 0;
+            margin: 0 0 10px 0;
             font-size: 22px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
+        .header-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
         /* Selector de turno elegante */
-        .select-shift {
-            margin: 5px 0 10px 0;
-            font-size: 15px;
+        .select-shift, .date-input {
+            margin: 5px 0;
+            font-size: 14px;
             font-weight: bold;
             color: #555;
-            padding: 4px 10px;
+            padding: 6px 10px;
             border: 1px solid #bdc3c7;
             border-radius: 4px;
             background: white;
             cursor: pointer;
             outline: none;
         }
-        .select-shift:focus {
+        .select-shift:focus, .date-input:focus {
             border-color: #2980b9;
-        }
-
-        .date-display {
-            font-size: 13px;
-            font-weight: bold;
-            color: #2c3e50;
         }
 
         button {
@@ -113,6 +115,22 @@
         }
         button.btn-history:hover {
             background-color: #1f618d;
+        }
+
+        button.btn-clear-list {
+            background-color: #c0392b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button.btn-clear-list:hover {
+            background-color: #a93226;
         }
 
         /* PANEL DE INGRESO RÁPIDO VERTICAL */
@@ -186,6 +204,12 @@
         /* LISTADO DE TRABAJO GENERADO */
         .work-list-section {
             margin-bottom: 30px;
+        }
+
+        .work-list-header-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 5px;
         }
 
         .header-row {
@@ -339,7 +363,8 @@
 
         /* MODO DE CAPTURA - ESTILOS LIMPIOS PARA LA IMAGEN */
         .is-capturing .input-panel,
-        .is-capturing .download-footer-container {
+        .is-capturing .download-footer-container,
+        .is-capturing .work-list-header-container {
             display: none !important;
         }
         .is-capturing {
@@ -396,7 +421,8 @@
             padding: 0 !important;
             text-align: left;
         }
-        .is-capturing .select-shift {
+        .is-capturing .select-shift,
+        .is-capturing .date-input {
             border: none !important;
             background: transparent !important;
             -webkit-appearance: none;
@@ -416,14 +442,16 @@
 <div class="container" id="capture-area">
     <header>
         <h1>Servicio de Camilleros</h1>
-        <select id="select-shift" class="select-shift" onchange="saveShift()">
-            <option value="Turno Mañana">Turno Mañana</option>
-            <option value="Turno Tarde">Turno Tarde</option>
-            <option value="Turno Noche 'A'">Turno Noche "A"</option>
-            <option value="Turno Noche 'B'" selected>Turno Noche "B"</option>
-            <option value="Franquero">Franquero</option>
-        </select>
-        <div class="date-display" id="current-date"></div>
+        <div class="header-controls">
+            <select id="select-shift" class="select-shift" onchange="saveShift()">
+                <option value="Turno Mañana">Turno Mañana</option>
+                <option value="Turno Tarde">Turno Tarde</option>
+                <option value="Turno Noche A">Turno Noche A</option>
+                <option value="Turno Noche B" selected>Turno Noche B</option>
+                <option value="Franquero">Franquero</option>
+            </select>
+            <input type="date" id="select-date" class="date-input" onchange="changeDate()">
+        </div>
     </header>
 
     <!-- PANEL DE INGRESO RÁPIDO -->
@@ -452,6 +480,9 @@
 
     <!-- LISTADO DE TRABAJO GENERADO -->
     <div class="work-list-section">
+        <div class="work-list-header-container">
+            <button class="btn-clear-list" onclick="clearList()">🗑️ Limpiar Lista</button>
+        </div>
         <div class="header-row">
             <div>N°</div>
             <div>Paciente</div>
@@ -539,21 +570,27 @@
         "Morgue"
     ];
 
-    const ahora = new Date();
+    // Configuración de límites de fecha (Hoy hasta Hoy + 1 día)
+    const todayObj = new Date();
+    const todayStr = todayObj.toISOString().slice(0, 10);
     
-    // EXCEPCIÓN TURNO NOCHE: Si está entre las 00:00 y las 06:59, pertenece operativa y visualmente a la fecha anterior (Turno Noche A/B)
-    let fechaOperativa = new Date(ahora);
-    if (ahora.getHours() < 7) {
-        fechaOperativa.setDate(ahora.getDate() - 1);
+    const tomorrowObj = new Date();
+    tomorrowObj.setDate(todayObj.getDate() + 1);
+    const tomorrowStr = tomorrowObj.toISOString().slice(0, 10);
+
+    const dateInput = document.getElementById('select-date');
+    dateInput.min = todayStr;
+    dateInput.max = tomorrowStr;
+
+    // Obtener fecha actual guardada o usar hoy por defecto
+    let activeDateStr = localStorage.getItem('guardia_current_date') || todayStr;
+    if (activeDateStr < todayStr || activeDateStr > tomorrowStr) {
+        activeDateStr = todayStr;
     }
+    dateInput.value = activeDateStr;
 
-    const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const fechaTextoFormateada = fechaOperativa.toLocaleDateString('es-ES', opcionesFecha);
-    document.getElementById('current-date').innerText = "Fecha: " + fechaTextoFormateada;
-
-    const todayStr = fechaOperativa.toISOString().slice(0,10);
-    const storageKey = 'guardia_pacientes_' + todayStr;
-    const shiftStorageKey = 'guardia_turno_' + todayStr;
+    let storageKey = 'guardia_pacientes_' + activeDateStr;
+    let shiftStorageKey = 'guardia_turno_' + activeDateStr;
 
     const savedShift = localStorage.getItem(shiftStorageKey);
     if (savedShift) {
@@ -563,6 +600,30 @@
     function saveShift() {
         const shiftVal = document.getElementById('select-shift').value;
         localStorage.setItem(shiftStorageKey, shiftVal);
+    }
+
+    function changeDate() {
+        const selectedDate = dateInput.value;
+        if (selectedDate < todayStr || selectedDate > tomorrowStr) {
+            alert('Solo se permite elegir la fecha actual o hasta un día más.');
+            dateInput.value = activeDateStr;
+            return;
+        }
+        activeDateStr = selectedDate;
+        localStorage.setItem('guardia_current_date', activeDateStr);
+        
+        storageKey = 'guardia_pacientes_' + activeDateStr;
+        shiftStorageKey = 'guardia_turno_' + activeDateStr;
+
+        const currentShift = localStorage.getItem(shiftStorageKey);
+        if (currentShift) {
+            document.getElementById('select-shift').value = currentShift;
+        } else {
+            saveShift();
+        }
+
+        patientsData = JSON.parse(localStorage.getItem(storageKey)) || [];
+        renderList();
     }
 
     function initSelectors() {
@@ -643,6 +704,15 @@
         renderList();
     }
 
+    function clearList() {
+        if (patientsData.length === 0) return;
+        if (confirm('¿Estás seguro de que deseas limpiar toda la lista de pacientes de esta guardia?')) {
+            patientsData = [];
+            localStorage.setItem(storageKey, JSON.stringify(patientsData));
+            renderList();
+        }
+    }
+
     function downloadCleanJPG() {
         if (patientsData.length === 0) {
             alert('Agrega al menos un paciente al listado antes de descargar.');
@@ -660,7 +730,7 @@
             container.classList.remove('hide-bed-column');
 
             const link = document.createElement('a');
-            link.download = 'Libro_Guardia_' + todayStr + '.jpg';
+            link.download = 'Libro_Guardia_' + activeDateStr + '.jpg';
             link.href = canvas.toDataURL('image/jpeg', 0.95);
             link.click();
         }).catch(err => {
@@ -673,6 +743,14 @@
 
     initSelectors();
     renderList();
+   
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registrado con éxito', reg))
+                .catch(err => console.log('Error al registrar Service Worker', err));
+        });
+    }
 </script>
 
 </body>

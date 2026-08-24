@@ -43,6 +43,12 @@
             letter-spacing: 1px;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         button {
             background-color: #2c3e50;
             color: white;
@@ -64,6 +70,13 @@
         }
         .btn-back:hover {
             background-color: #1f618d;
+        }
+
+        .btn-clear-history {
+            background-color: #c0392b;
+        }
+        .btn-clear-history:hover {
+            background-color: #a93226;
         }
 
         .history-list {
@@ -90,14 +103,6 @@
             align-items: center;
             border-bottom: 1px solid #eee;
             padding-bottom: 8px;
-        }
-
-        .history-shift-tag {
-            background: #34495e;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 13px;
         }
 
         .history-table {
@@ -132,7 +137,10 @@
 <div class="container">
     <header>
         <h1>Historial de Guardias</h1>
-        <button class="btn-back" onclick="window.location.href='index.html'">← Volver al Listado Actual</button>
+        <div class="header-actions">
+            <button class="btn-clear-history" onclick="clearAllHistory()">🗑️ Borrar Historial</button>
+            <button class="btn-back" onclick="window.location.href='index.html'">← Volver al Listado Actual</button>
+        </div>
     </header>
 
     <div id="history-container" class="history-list">
@@ -165,8 +173,6 @@
         keys.forEach(key => {
             let dateStr = key.replace('guardia_pacientes_', '');
             let patientsData = JSON.parse(localStorage.getItem(key)) || [];
-            let shiftKey = 'guardia_turno_' + dateStr;
-            let shiftVal = localStorage.getItem(shiftKey) || 'Turno no especificado';
 
             // Formatear la fecha para que se lea de forma amigable
             let [year, month, day] = dateStr.split('-');
@@ -191,13 +197,12 @@
                     `;
                 });
             } else {
-                tableRows = `<tr><td colspan="5" style="text-align: center; font-style: italic; color: #7f8c8d;">Sin pacientes registrados en esta fecha.</td></tr>`;
+                tableRows = `<tr><td colspan="5" style="text-align: center; font-style: italic; color: #7f8c8d;">Lista limpiada o sin pacientes registrados en esta fecha.</td></tr>`;
             }
 
             card.innerHTML = `
                 <div class="history-card-header">
                     <span>📅 ${formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1)}</span>
-                    <span class="history-shift-tag">${shiftVal}</span>
                 </div>
                 <table class="history-table">
                     <thead>
@@ -219,7 +224,30 @@
         });
     }
 
+    function clearAllHistory() {
+        if (confirm('¿Estás seguro de que deseas eliminar todo el historial de guardias guardado? Esta acción no se puede deshacer.')) {
+            let keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                if (key.startsWith('guardia_pacientes_') || key.startsWith('guardia_turno_') || key === 'guardia_current_date') {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            loadHistory();
+        }
+    }
+
     loadHistory();
+    
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registrado con éxito', reg))
+                .catch(err => console.log('Error al registrar Service Worker', err));
+        });
+    }
 </script>
 
 </body>
